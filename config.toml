@@ -1,0 +1,30 @@
+baseurl = "https://stainless.io/"
+languageCode = "en-us"
+title = "Stainless"
+theme = "cactus-plus"
+Paginate = 10
+preserveTaxonomyNames = true
+enableRobotsTXT = true
+pygmentsCodefences = true
+
+[permalinks]
+page = "/:slug/"
+
+[blackfriday]
+hrefTargetBlank = true
+
+[taxonomies]
+tag = "tags"
+author = "authors"
+
+[params]
+copyright="&copy; 2017 Russell Hay and respective authors"
+disqusShortname="stainless"
+enableDisqus = true
+twitter = "pkstainless"
+iconFont = "font-awesome"
+
+[social]
+twitter = "https://twitter.com/pkstainless"
+github = "https://github.com/RussTheAerialist"
+instagram = "http://instagram.com/therealrussellhay"
