@@ -1,1 +1,1 @@
-[https://stainless.io/](Stainless.io)
+[Stainless.io](https://stainless.io/)
