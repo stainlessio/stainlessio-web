@@ -7,6 +7,10 @@
     </a>
     {{ end }}
 
+    <a class="symbol" href="{{ .Site.RSSLink }}">
+        <i class="fa fa-rss"></i>
+    </a>
+
 {{ else }}
 	
 	{{ $iconStyle := .Site.Params.socialIconStyle }}
