@@ -1,12 +1,14 @@
 +++
 title = "Bitflags 1.0.1 - Part 2"
-date = 2017-11-13T17:12:03-08:00
-tags = ["linebyline", "crate"]
-draft = true
+date = 2017-11-24T15:53:27-08:00
+tags = ["linebyline", "crate", "rust"]
+draft = false
 authors = ["rhay"]
 +++
-Let's look at what 
-`__impl_bitflags!` does.
+This is part two in the series of breaking down the rust crate `Bitflags`. If you haven't already,
+go read [part one]({{% ref "post/bitflags-part-1.md" %}})
+
+Let's look at what `__impl_bitflags!` does.
 
 ```rust
 macro_rules! __impl_bitflags {
@@ -15,342 +17,231 @@ macro_rules! __impl_bitflags {
     ) => {
         impl $crate::_core::fmt::Debug for $BitFlags {
             fn fmt(&self, f: &mut $crate::_core::fmt::Formatter) -> $crate::_core::fmt::Result {
-                // This convoluted approach is to handle #[cfg]-based flag
-                // omission correctly. For example it needs to support:
-                //
-                //    #[cfg(unix)] const A: Flag = /* ... */;
-                //    #[cfg(windows)] const B: Flag = /* ... */;
+```
 
-                // Unconditionally define a check for every flag, even disabled
-                // ones.
-                #[allow(non_snake_case)]
-                trait __BitFlags {
-                    $(
-                        #[inline]
-                        fn $Flag(&self) -> bool { false }
-                    )+
-                }
+First up, it implements the ability to debug/format the struct into a nice enough string,
+but first, as explained in the
+[comment in the original code](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L402,409),
+the code needs to do some convoluted things to
+handle flags that are omitted conditionally, so let's walk through that.
 
-                // Conditionally override the check for just those flags that
-                // are not #[cfg]ed away.
-                impl __BitFlags for $BitFlags {
-                    $(
-                        __impl_bitflags! {
-                            #[allow(deprecated)]
-                            #[inline]
-                            $(? #[$attr $($args)*])*
-                            fn $Flag(&self) -> bool {
-                                self.bits & Self::$Flag.bits == Self::$Flag.bits
-                            }
-                        }
-                    )+
-                }
-
-                let mut first = true;
-                $(
-                    if <$BitFlags as __BitFlags>::$Flag(self) {
-                        if !first {
-                            try!(f.write_str(" | "));
-                        }
-                        first = false;
-                        try!(f.write_str(stringify!($Flag)));
-                    }
-                )+
-                if first {
-                    try!(f.write_str("(empty)"));
-                }
-                Ok(())
-            }
-        }
-        impl $crate::_core::fmt::Binary for $BitFlags {
-            fn fmt(&self, f: &mut $crate::_core::fmt::Formatter) -> $crate::_core::fmt::Result {
-                $crate::_core::fmt::Binary::fmt(&self.bits, f)
-            }
-        }
-        impl $crate::_core::fmt::Octal for $BitFlags {
-            fn fmt(&self, f: &mut $crate::_core::fmt::Formatter) -> $crate::_core::fmt::Result {
-                $crate::_core::fmt::Octal::fmt(&self.bits, f)
-            }
-        }
-        impl $crate::_core::fmt::LowerHex for $BitFlags {
-            fn fmt(&self, f: &mut $crate::_core::fmt::Formatter) -> $crate::_core::fmt::Result {
-                $crate::_core::fmt::LowerHex::fmt(&self.bits, f)
-            }
-        }
-        impl $crate::_core::fmt::UpperHex for $BitFlags {
-            fn fmt(&self, f: &mut $crate::_core::fmt::Formatter) -> $crate::_core::fmt::Result {
-                $crate::_core::fmt::UpperHex::fmt(&self.bits, f)
-            }
-        }
-
-        #[allow(dead_code)]
-        impl $BitFlags {
-            $(
-                $(#[$attr $($args)*])*
-                pub const $Flag: $BitFlags = $BitFlags { bits: $value };
-            )+
-
-            /// Returns an empty set of flags.
-            #[inline]
-            pub fn empty() -> $BitFlags {
-                $BitFlags { bits: 0 }
-            }
-
-            /// Returns the set containing all flags.
-            #[inline]
-            pub fn all() -> $BitFlags {
-                // See `Debug::fmt` for why this approach is taken.
-                #[allow(non_snake_case)]
-                trait __BitFlags {
-                    $(
-                        #[inline]
-                        fn $Flag() -> $T { 0 }
-                    )+
-                }
-                impl __BitFlags for $BitFlags {
-                    $(
-                        __impl_bitflags! {
-                            #[allow(deprecated)]
-                            #[inline]
-                            $(? #[$attr $($args)*])*
-                            fn $Flag() -> $T { Self::$Flag.bits }
-                        }
-                    )+
-                }
-                $BitFlags { bits: $(<$BitFlags as __BitFlags>::$Flag())|+ }
-            }
-
-            /// Returns the raw value of the flags currently stored.
-            #[inline]
-            pub fn bits(&self) -> $T {
-                self.bits
-            }
-
-            /// Convert from underlying bit representation, unless that
-            /// representation contains bits that do not correspond to a flag.
-            #[inline]
-            pub fn from_bits(bits: $T) -> $crate::_core::option::Option<$BitFlags> {
-                if (bits & !$BitFlags::all().bits()) == 0 {
-                    $crate::_core::option::Option::Some($BitFlags { bits: bits })
-                } else {
-                    $crate::_core::option::Option::None
-                }
-            }
-
-            /// Convert from underlying bit representation, dropping any bits
-            /// that do not correspond to flags.
-            #[inline]
-            pub fn from_bits_truncate(bits: $T) -> $BitFlags {
-                $BitFlags { bits: bits } & $BitFlags::all()
-            }
-
-            /// Returns `true` if no flags are currently stored.
-            #[inline]
-            pub fn is_empty(&self) -> bool {
-                *self == $BitFlags::empty()
-            }
-
-            /// Returns `true` if all flags are currently set.
-            #[inline]
-            pub fn is_all(&self) -> bool {
-                *self == $BitFlags::all()
-            }
-
-            /// Returns `true` if there are flags common to both `self` and `other`.
-            #[inline]
-            pub fn intersects(&self, other: $BitFlags) -> bool {
-                !(*self & other).is_empty()
-            }
-
-            /// Returns `true` all of the flags in `other` are contained within `self`.
-            #[inline]
-            pub fn contains(&self, other: $BitFlags) -> bool {
-                (*self & other) == other
-            }
-
-            /// Inserts the specified flags in-place.
-            #[inline]
-            pub fn insert(&mut self, other: $BitFlags) {
-                self.bits |= other.bits;
-            }
-
-            /// Removes the specified flags in-place.
-            #[inline]
-            pub fn remove(&mut self, other: $BitFlags) {
-                self.bits &= !other.bits;
-            }
-
-            /// Toggles the specified flags in-place.
-            #[inline]
-            pub fn toggle(&mut self, other: $BitFlags) {
-                self.bits ^= other.bits;
-            }
-
-            /// Inserts or removes the specified flags depending on the passed value.
-            #[inline]
-            pub fn set(&mut self, other: $BitFlags, value: bool) {
-                if value {
-                    self.insert(other);
-                } else {
-                    self.remove(other);
-                }
-            }
-        }
-
-        impl $crate::_core::ops::BitOr for $BitFlags {
-            type Output = $BitFlags;
-
-            /// Returns the union of the two sets of flags.
-            #[inline]
-            fn bitor(self, other: $BitFlags) -> $BitFlags {
-                $BitFlags { bits: self.bits | other.bits }
-            }
-        }
-
-        impl $crate::_core::ops::BitOrAssign for $BitFlags {
-
-            /// Adds the set of flags.
-            #[inline]
-            fn bitor_assign(&mut self, other: $BitFlags) {
-                self.bits |= other.bits;
-            }
-        }
-
-        impl $crate::_core::ops::BitXor for $BitFlags {
-            type Output = $BitFlags;
-
-            /// Returns the left flags, but with all the right flags toggled.
-            #[inline]
-            fn bitxor(self, other: $BitFlags) -> $BitFlags {
-                $BitFlags { bits: self.bits ^ other.bits }
-            }
-        }
-
-        impl $crate::_core::ops::BitXorAssign for $BitFlags {
-
-            /// Toggles the set of flags.
-            #[inline]
-            fn bitxor_assign(&mut self, other: $BitFlags) {
-                self.bits ^= other.bits;
-            }
-        }
-
-        impl $crate::_core::ops::BitAnd for $BitFlags {
-            type Output = $BitFlags;
-
-            /// Returns the intersection between the two sets of flags.
-            #[inline]
-            fn bitand(self, other: $BitFlags) -> $BitFlags {
-                $BitFlags { bits: self.bits & other.bits }
-            }
-        }
-
-        impl $crate::_core::ops::BitAndAssign for $BitFlags {
-
-            /// Disables all flags disabled in the set.
-            #[inline]
-            fn bitand_assign(&mut self, other: $BitFlags) {
-                self.bits &= other.bits;
-            }
-        }
-
-        impl $crate::_core::ops::Sub for $BitFlags {
-            type Output = $BitFlags;
-
-            /// Returns the set difference of the two sets of flags.
-            #[inline]
-            fn sub(self, other: $BitFlags) -> $BitFlags {
-                $BitFlags { bits: self.bits & !other.bits }
-            }
-        }
-
-        impl $crate::_core::ops::SubAssign for $BitFlags {
-
-            /// Disables all flags enabled in the set.
-            #[inline]
-            fn sub_assign(&mut self, other: $BitFlags) {
-                self.bits &= !other.bits;
-            }
-        }
-
-        impl $crate::_core::ops::Not for $BitFlags {
-            type Output = $BitFlags;
-
-            /// Returns the complement of this set of flags.
-            #[inline]
-            fn not(self) -> $BitFlags {
-                $BitFlags { bits: !self.bits } & $BitFlags::all()
-            }
-        }
-
-        impl $crate::_core::iter::Extend<$BitFlags> for $BitFlags {
-            fn extend<T: $crate::_core::iter::IntoIterator<Item=$BitFlags>>(&mut self, iterator: T) {
-                for item in iterator {
-                    self.insert(item)
-                }
-            }
-        }
-
-        impl $crate::_core::iter::FromIterator<$BitFlags> for $BitFlags {
-            fn from_iter<T: $crate::_core::iter::IntoIterator<Item=$BitFlags>>(iterator: T) -> $BitFlags {
-                let mut result = Self::empty();
-                result.extend(iterator);
-                result
-            }
-        }
-    };
-
-    // Every attribute that the user writes on a const is applied to the
-    // corresponding const that we generate, but within the implementation of
-    // Debug and all() we want to ignore everything but #[cfg] attributes. In
-    // particular, including a #[deprecated] attribute on those items would fail
-    // to compile.
-    // https://github.com/rust-lang-nursery/bitflags/issues/109
-    //
-    // Input:
-    //
-    //     ? #[cfg(feature = "advanced")]
-    //     ? #[deprecated(note = "Use somthing else.")]
-    //     ? #[doc = r"High quality documentation."]
-    //     fn f() -> i32 { /* ... */ }
-    //
-    // Output:
-    //
-    //     #[cfg(feature = "advanced")]
-    //     fn f() -> i32 { /* ... */ }
-    (
-        $(#[$filtered:meta])*
-        ? #[cfg $($cfgargs:tt)*]
-        $(? #[$rest:ident $($restargs:tt)*])*
-        fn $($item:tt)*
-    ) => {
-        __impl_bitflags! {
-            $(#[$filtered])*
-            #[cfg $($cfgargs)*]
-            $(? #[$rest $($restargs)*])*
-            fn $($item)*
-        }
-    };
-    (
-        $(#[$filtered:meta])*
-        // $next != `cfg`
-        ? #[$next:ident $($nextargs:tt)*]
-        $(? #[$rest:ident $($restargs:tt)*])*
-        fn $($item:tt)*
-    ) => {
-        __impl_bitflags! {
-            $(#[$filtered])*
-            // $next filtered out
-            $(? #[$rest $($restargs)*])*
-            fn $($item)*
-        }
-    };
-    (
-        $(#[$filtered:meta])*
-        fn $($item:tt)*
-    ) => {
-        $(#[$filtered])*
-        fn $($item)*
-    };
+```rust
+#[allow(non_snake_case)]
+trait __BitFlags {
+    $(
+        #[inline]
+        fn $Flag(&self) -> bool { false }
+    )+
 }
 ```
+
+First they create an unconditional function for the flag that converts it to a bool,
+and always returns false. This is done as a trait so they can "override" it later
+with a full implementation for the ones that will be included.
+
+The code is pretty straight forward, it's a trait called `__BitFlags` that gets generated with
+one function per flag. This is used later for printing out the flags.
+
+```rust
+impl __BitFlags for $BitFlags {
+    $(
+        __impl_bitflags! {
+            #[allow(deprecated)]
+            #[inline]
+            $(? #[$attr $($args)*])*
+            fn $Flag(&self) -> bool {
+                self.bits & Self::$Flag.bits == Self::$Flag.bits
+            }
+        }
+    )+
+}
+```
+
+Next, they create an implementation for the new `__BitFlags` trait, and override
+the implementation of the conversion function for each flag.  This respects the conditional
+compile attributes because of the expansion of `$(? #[$attr $($args)*])*`
+
+```rust                
+        let mut first = true;
+        $(
+            if <$BitFlags as __BitFlags>::$Flag(self) {
+```
+
+Here we are generating a conditional that calls the flag function in the `__BitFlags` trait. This works even for ones
+that were conditionally compiled out because the trait has a default implementation of the flag function which
+always returns `false`.
+
+```rust            
+if !first {
+    try!(f.write_str(" | "));
+}
+first = false;
+```
+
+This bit is a standard way of handling separators when outputting lists. If this is the first time it is outputting
+something, it skips the separator, otherwise it prints it out, and then clears the `first` marker to say that we 
+are no longer on the first item.
+
+```rust                
+try!(f.write_str(stringify!($Flag)));
+```
+
+[`try!`](https://doc.rust-lang.org/1.9.0/std/macro.try!.html) is a common macro for rust that unwraps a `Result`
+erroring out early if necessary. In this case, we are wrapping `write_str` because i/o can always fail, and we
+need a way of asserting that it passed. Keep in mind that this can only be used in a function that returns `Result`
+otherwise, it'll give you confusing error messages.
+
+[`stringify!`](https://doc.rust-lang.org/1.1.0/std/macro.stringify!.html) was a new macro for me when I started looking
+into this, but what it does is takes a symbol (or any sequence of tokens) and returns a `&'static str` that is the 
+text representation of the symbol. In this case, it's used to convert the `ident` version of the flag into a string for
+output to `f` via `write_str`.
+
+```rust                
+            }
+        )+
+        if first {
+            try!(f.write_str("(empty)"));
+        }
+        Ok(())
+    }
+}
+```
+
+The rest of the `fmt` function is clean up for edge cases, and returning `Ok()` once we are done. Then we get the
+implementation of `Binary`, `Octal`, `LowerHex`, and `UpperHex` for covering different output formats.  For more 
+information on those, check out the [fmt](https://doc.rust-lang.org/1.1.0/std/fmt/index.html) docs and the traits
+defined therein.
+
+I'll next take on each small chunk of the implementation.
+
+```rust
+#[allow(dead_code)]
+impl $BitFlags {
+    $(
+        $(#[$attr $($args)*])*
+        pub const $Flag: $BitFlags = $BitFlags { bits: $value };
+    )+
+```
+
+This first bit is a serious of constants for referring to the values of the bitflag. Under the hood, these are all of
+the type of the `$BitFlags` struct that the macro created, and the `bits` is initialized to the value of the flag.
+
+```rust    
+    /// Returns an empty set of flags.
+    #[inline]
+    pub fn empty() -> $BitFlags {
+        $BitFlags { bits: 0 }
+    }
+```
+
+Next we create a constructor function that returns an empty `$BitFlags` struct with all flags set to false (e.g. 
+`bits = 0`)
+
+```rust    
+    /// Returns the set containing all flags.
+    #[inline]
+    pub fn all() -> $BitFlags {
+        // See `Debug::fmt` for why this approach is taken.
+        #[allow(non_snake_case)]
+        trait __BitFlags {
+            $(
+                #[inline]
+                fn $Flag() -> $T { 0 }
+            )+
+        }
+        impl __BitFlags for $BitFlags {
+            $(
+                __impl_bitflags! {
+                    #[allow(deprecated)]
+                    #[inline]
+                    $(? #[$attr $($args)*])*
+                    fn $Flag() -> $T { Self::$Flag.bits }
+                }
+            )+
+        }
+        $BitFlags { bits: $(<$BitFlags as __BitFlags>::$Flag())|+ }
+    }
+```
+
+The `all()` function returns a struct that has all of the flags set to true. This function takes the same approach as
+`Debug::fmt` to handle conditionally compiled flags by defining a trait that defaults to false, and then only defining
+implementations for flags that are conditionally compiled into the code.
+
+Then the `all()` function returns the bit-wise OR'ing of the flags together.
+
+The [`bits()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L509)
+function returns the raw value of the bits field in the struct, and isn't worth covering in more depth.
+
+```rust    
+    /// Convert from underlying bit representation, unless that
+    /// representation contains bits that do not correspond to a flag.
+    #[inline]
+    pub fn from_bits(bits: $T) -> $crate::_core::option::Option<$BitFlags> {
+        if (bits & !$BitFlags::all().bits()) == 0 {
+            $crate::_core::option::Option::Some($BitFlags { bits: bits })
+        } else {
+            $crate::_core::option::Option::None
+        }
+    }
+    
+    /// Convert from underlying bit representation, dropping any bits
+    /// that do not correspond to flags.
+    #[inline]
+    pub fn from_bits_truncate(bits: $T) -> $BitFlags {
+        $BitFlags { bits: bits } & $BitFlags::all()
+    }    
+```
+
+`from_bits()` is a clever little function that takes a value of whatever the type of the BitFlags is (e.g. `u32`),
+compares it to the return value of the `all()` function by bit-wise NOT and bit-wise AND to ensure that all of the
+on values in the incoming bits value are associated with a flag in the bit field.  This returns an `Option<>` for
+the bit flag, but only if it can be converted fully.
+
+The next function `from_bits_truncate()` ignores any unassociated bits, dropping them as needed. Since this can never
+fail, it returns a new bit flag value unconditionally.
+
+I've skipped the
+[`is_empty()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L533),
+[`is_all()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L539),
+[`intersects()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L545),
+[`contains()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L551),
+[`insert()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L557),
+[`remove()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L563),
+[`toggle()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L569),
+and [`set()`](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L575)
+functions because they are exactly what you'd expect from bit manipulation, but of course, for any of these to operate
+correctly, they need to implement many of the [`core::ops`](https://doc.rust-lang.org/core/ops/) methods for the
+bit-wise operations. Most of these are similar to the standard bit manipulation operators, except that it works on the
+`bits` member of the struct. I won't disect them either, but you can view the code starting on
+[line 584](https://github.com/rust-lang-nursery/bitflags/blob/f2ccedd7e1426b2ea1f0329c1d1db18b4436e9d5/src/lib.rs#L584)
+
+```rust   
+impl $crate::_core::iter::Extend<$BitFlags> for $BitFlags {
+    fn extend<T: $crate::_core::iter::IntoIterator<Item=$BitFlags>>(&mut self, iterator: T) {
+        for item in iterator {
+            self.insert(item)
+        }
+    }
+}
+
+impl $crate::_core::iter::FromIterator<$BitFlags> for $BitFlags {
+    fn from_iter<T: $crate::_core::iter::IntoIterator<Item=$BitFlags>>(iterator: T) -> $BitFlags {
+        let mut result = Self::empty();
+        result.extend(iterator);
+        result
+    }
+}
+```
+
+One more bit of essentially boilerplate implementation that is necessary and that's the `FromIterator` and
+`Extend` traits that allow the user to create values from an iterator. For the `Extend`, they call
+`$BitFlag.insert()` on each value in the iterator. `extend` is attached to a value of type `$BitFlags`, so it mutates
+the current value into a new value with the additional items in the iterator.
+
+`FromIterator::from_iter` is a constructor function that returns a new instance of the `$BitFlags` struct with the 
+values set from the iterator. It does this by calling extend for each value of the iterator and returning the resulting
+mutated object. This is a great example of using mutable state within a function but having it return an immutable
+value afterwards.
+
+This last bit of the macro... holy crap is going to take quite a bit to understand, but I'm going to save it
+for part three.  Until next week (? or whenever I decide to sit down and figure this out)

@@ -1,7 +1,7 @@
 +++
 title = "Bitflags 1.0.1 - Part 1"
 date = 2017-11-21T13:00:00-08:00
-tags = ["linebyline", "crate"]
+tags = ["linebyline", "crate", "rust"]
 draft = false
 authors = ["rhay"]
 +++
@@ -145,7 +145,7 @@ easier.
 
 And were we have another indirection into another implementation specific macro.
   The `__impl_bitflags` is a pretty big macro, so I'm breaking that out into a separate
-  article.
+  article. Continue on to [part 2]({{% ref "post/bitflags-part-2.md" %}})
   
 If you enjoyed this post, or if you have any feedback, corrections, or anything, please
 let a comment below.
