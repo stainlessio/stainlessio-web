@@ -245,3 +245,8 @@ value afterwards.
 
 This last bit of the macro... holy crap is going to take quite a bit to understand, but I'm going to save it
 for part three.  Until next week (? or whenever I decide to sit down and figure this out)
+
+Continue on to [part 3]({{% ref "post/bitflags-part-3.md" %}})
+  
+If you enjoyed this post, or if you have any feedback, corrections, or anything, please
+leave a comment below.

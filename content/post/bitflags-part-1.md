@@ -148,4 +148,4 @@ And were we have another indirection into another implementation specific macro.
   article. Continue on to [part 2]({{% ref "post/bitflags-part-2.md" %}})
   
 If you enjoyed this post, or if you have any feedback, corrections, or anything, please
-let a comment below.
+leave a comment below.
