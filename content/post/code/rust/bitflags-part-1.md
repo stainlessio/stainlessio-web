@@ -4,6 +4,9 @@ date = 2017-11-21T13:00:00-08:00
 tags = ["linebyline", "crate", "rust"]
 draft = false
 authors = ["rhay"]
+aliases = [
+  "post/bitflags-part-1/"
+]
 +++
 The Line by Line series will be an in-depth look at Crates in the Rust ecosystem.  It's an attempt for me to get a 
 better understanding of Rust by looking at real work examples and explaining what they do.
@@ -145,7 +148,7 @@ easier.
 
 And were we have another indirection into another implementation specific macro.
   The `__impl_bitflags` is a pretty big macro, so I'm breaking that out into a separate
-  article. Continue on to [part 2]({{% ref "post/bitflags-part-2.md" %}})
+  article. Continue on to [part 2]({{% ref "post/code/rust/bitflags-part-2.md" %}})
   
 If you enjoyed this post, or if you have any feedback, corrections, or anything, please
 leave a comment below.
