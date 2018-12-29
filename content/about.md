@@ -1,6 +1,7 @@
 +++
 title = "About Stainless.io"
 date = "2017-11-21"
+menu = "main"
 +++
 [Stainless.io](/) is a blog where we dig deep into technical topics on
 programming, hardware, and other things. This was started because of the adage that

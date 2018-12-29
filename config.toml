@@ -1,7 +1,7 @@
 baseurl = "https://stainless.io/"
 languageCode = "en-us"
 title = "Stainless"
-theme = "cactus-plus"
+theme = "hugo-paper"
 Paginate = 10
 preserveTaxonomyNames = true
 enableRobotsTXT = true
