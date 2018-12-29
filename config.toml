@@ -21,10 +21,10 @@ author = "authors"
 copyright="&copy; 2017 Russell Hay and respective authors"
 disqusShortname="stainless"
 enableDisqus = true
-twitter = "pkstainless"
+twitter = "stainlessio"
 iconFont = "font-awesome"
 
 [social]
-twitter = "https://twitter.com/pkstainless"
+twitter = "https://twitter.com/stainlessio"
 github = "https://github.com/RussTheAerialist"
 instagram = "http://instagram.com/therealrussellhay"
