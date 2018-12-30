@@ -9,8 +9,8 @@ aliases = [
 +++
 
 This is part three in the series of breaking down the rust crate `Bitflags`. If you haven't already,
-go read [part one]({{% ref "post/code/rust/bitflags-part-1.md" %}}) and
-[page two]({{% ref "post/code/rust/bitflags-part-2.md" %}})
+go read [part one]({{% ref "/post/code/rust/bitflags-part-1.md" %}}) and
+[page two]({{% ref "/post/code/rust/bitflags-part-2.md" %}})
 
 And lastly, we are on to the most obtuse bit of the entire crate, which arguably I still don't fully understand, but
  let's dive in to see.  Let's start with the chunk of comment that explains what this macro does at the high level

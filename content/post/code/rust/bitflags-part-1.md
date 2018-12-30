@@ -148,7 +148,7 @@ easier.
 
 And were we have another indirection into another implementation specific macro.
   The `__impl_bitflags` is a pretty big macro, so I'm breaking that out into a separate
-  article. Continue on to [part 2]({{% ref "post/code/rust/bitflags-part-2.md" %}})
+  article. Continue on to [part 2]({{% ref "/post/code/rust/bitflags-part-2.md" %}})
   
 If you enjoyed this post, or if you have any feedback, corrections, or anything, please
 leave a comment below.
