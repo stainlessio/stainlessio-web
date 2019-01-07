@@ -6,6 +6,7 @@ Paginate = 10
 preserveTaxonomyNames = true
 enableRobotsTXT = true
 pygmentsCodefences = true
+googleAnalytics = "UA-514101-28"
 
 [permalinks]
 page = "/:slug/"
@@ -18,7 +19,7 @@ tag = "tags"
 author = "authors"
 
 [params]
-copyright="&copy; 2017 Russell Hay and respective authors"
+copyright="&copy; 2019 Russell Hay and respective authors"
 disqusShortname="stainless"
 enableDisqus = true
 twitter = "stainlessio"
