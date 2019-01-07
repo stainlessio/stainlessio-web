@@ -1,6 +1,6 @@
 +++
 title = "Dropping root privileges in rust"
-date = 2019-01-07T00:00:01-08:00
+date = 2019-01-07T06:00:00-08:00
 tags = ["rust", "tutorial", "simple", "security"]
 authors = [ "rhay" ]
 +++
