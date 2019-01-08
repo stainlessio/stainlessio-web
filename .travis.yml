@@ -1,6 +1,8 @@
 addons:
   ssh_known_hosts: russellhay.com
 language: go
+env:
+  - HUGO_ENV=production
 go:
 - "1.10.x"
 install:
