@@ -24,6 +24,8 @@ disqusShortname="stainless"
 enableDisqus = true
 twitter = "stainlessio"
 iconFont = "font-awesome"
+author = "Russell Hay"
+authorId = "https://russellhay.com/"
 
 [social]
 twitter = "https://twitter.com/stainlessio"
