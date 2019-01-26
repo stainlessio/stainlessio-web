@@ -1,12 +1,7 @@
-<script type="application/ld+json">
 { 
   "@context": "http://schema.org/",
   "@type": "BlogPosting",
   "@id": "{{ .Permalink }}",
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": "{{ .Site.BaseURL }}"
-  },
   "author": {
     "@type": "Person",
     "sameAs": "{{ .Site.Params.authorId }}",
@@ -25,4 +20,3 @@
   {{ end -}}
 
 }
-</script>
