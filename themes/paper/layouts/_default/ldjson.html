@@ -1,14 +1,14 @@
 { 
   "@context": "http://schema.org/",
   "@type": "BlogPosting",
-  "id": "{{ .Permalink }}",
+  "@id": "{{ .Permalink }}",
   "author": {
     "@type": "Person",
     "sameAs": "{{ .Site.Params.authorId }}",
     "name": "{{ .Site.Params.author }}"
   },
-  "datePublished": "{{ .PublishDate }}",
-  "dateModified": "{{ .Lastmod }}",
+  "datePublished": "{{ .PublishDate.Format "2006-01-02T15:04:05Z0700" }}",
+  "dateModified": "{{ .Lastmod.Format "2006-01-02T15:04:05Z0700" }}",
   "headline": "{{ .Title }}"
   {{- if .Param "featured" }}
   ,"image": "{{ .Param "featured" }}"
