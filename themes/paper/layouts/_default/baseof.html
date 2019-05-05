@@ -17,9 +17,15 @@
   {{- if eq .Kind "page" }}
   <meta name="description" content="{{ .Summary }}">
   <meta name="author" content="{{ .Params.author | default .Site.Params.author }}">
+  <meta name="twitter:card" content="{{ .Summary }}" >
+  <meta name="twitter:site" content="@stainlessio">
+  <meta name="twitter:creator" content="@stainlessio">
   {{ else }}
   <meta name="description" content="{{ .Site.Params.description }}">
   <meta name="author" content="{{ .Site.Params.author }}">
+  <meta name="twitter:card" content="{{ .Site.Params.description }}" >
+  <meta name="twitter:site" content="@stainlessio">
+  <meta name="twitter:creator" content="@stainlessio">
   {{ end -}}
   <!-- Styles -->
   <link href="{{.Site.BaseURL}}css/font.css" rel="stylesheet">
